@@ -18,7 +18,7 @@
         </thead>
         <tbody c>
           <tr v-for="expense in expenses" :key="expense.id"  class="odd:bg-gray-200 text-black showEle"
-            :class="{ 'hideEle': !filterByName(expense.name) && filterName.length > 0 }">
+            :class="{ 'hideEle': !filterByName(expense.name) }">
             <td class="px-6 py-4">
               {{ expense.name }}
             </td>
@@ -61,8 +61,7 @@ import type { FilterType } from '@/Interface/Interface';
 import type { Expense } from '@/Interface/Interface';
 
 //properties
-const expenses = reactive<Expense[]>([])
-const filterName = ref<string>("");
+const expenses = reactive<Expense[]>([]);
 const filters = ref<FilterType>({});
 const isAddNewTask = ref<boolean>(false);
 const isUpdateTask = ref<boolean>(false);
@@ -79,8 +78,12 @@ function addNewTask(task: Expense) {
   expenses.unshift(task);
 }
 //fitler expense by name
-function filterByName(name: string): boolean {
-  return name.toLowerCase().includes(filterName.value.toLowerCase());
+function filterByName(name: string = ''): boolean {
+  const propFilterName:string = filters.value?.name || '';
+  if (propFilterName.length > 0) {
+    return name.toLowerCase().includes(propFilterName.toLowerCase());
+  }
+  return true;
 }
 //get props filter from filter component
 function getFilters(filterNames: FilterType) {
