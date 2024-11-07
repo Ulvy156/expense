@@ -1,10 +1,14 @@
 <template>
   <section class="w-[80%] m-auto mt-20">
-    <component :is="InfoExpense" v-if="isAddNewTask" @addNewTask="addNewTask" @close="isAddNewTask = false" />
-    <component :is="FilterComponent" @addExpense="isAddNewTask = true" @filter="getFilters" />
-    <component :is="UpdateExpense" v-if="isUpdateTask" :expense="expenseDataUpdate" @updateNewTask="updateExpense"
+    <component :is="InfoExpense" v-if="isAddNewTask" :categoriesProp="newCategories" @addNewTask="addNewTask" @close="isAddNewTask = false" />
+    <component :is="FilterComponent" @addCategories="getCategories" @addExpense="isAddNewTask = true" @filter="getFilters" />
+    <component :is="UpdateExpense" :categoriesProp="newCategories" v-if="isUpdateTask" :expense="expenseDataUpdate" @updateNewTask="updateExpense"
       @close="isUpdateTask = false" />
     <BudgetMonthly :expenses/>
+    <component :is="PopUpConfirm" v-if="isDeleting"
+    @cancel="isDeleting = false"
+    @confirm="deleteExpense"
+    />
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
       <table class="w-full text-md text-left max-h-[50vh] overflow-y-auto rtl:text-right text-gray-500 dark:text-gray-400">
         <thead class="text-md text-white uppercase bg-black">
@@ -16,7 +20,7 @@
             <th scope="col" class="px-6 py-3">Action</th>
           </tr>
         </thead>
-        <tbody c>
+        <tbody>
           <tr v-for="expense in expenses" :key="expense.id"  class="odd:bg-gray-200 text-black showEle"
             :class="{ 'hideEle': !filterByName(expense.name) && filterName.length > 0 }">
             <td class="px-6 py-4">
@@ -33,7 +37,7 @@
             </td>
             <td class="px-6 py-4 gap-x-5 flex">
               <a @click="expenseToUpdate(expense)" class="font-medium text-blue-600 hover:underline">Edit</a>
-              <a @click="deleteExpense(expense.id)" class="font-medium text-red-600 hover:underline">Delete</a>
+              <a @click="idToDelete = expense.id; isDeleting = true" class="font-medium text-red-600 hover:underline">Delete</a>
             </td>
           </tr>
           <tr v-if="expenses.length" class="bg-black text-white">
@@ -55,9 +59,11 @@ import { computed, defineAsyncComponent, reactive, ref } from 'vue';
 const FilterComponent = defineAsyncComponent(() => import('./FilterComponent.vue'));
 const InfoExpense = defineAsyncComponent(() => import('./InfoExpense.vue'));
 const UpdateExpense = defineAsyncComponent(() => import('./UpdateExpense.vue'));
+const PopUpConfirm = defineAsyncComponent(() => import('./PopUpConfirm.vue'))
+
 import BudgetMonthly from './BudgetMonthly.vue';
 //interfaces
-import type { FilterType } from '@/Interface/Interface';
+import type { Category, FilterType } from '@/Interface/Interface';
 import type { Expense } from '@/Interface/Interface';
 
 //properties
@@ -66,6 +72,8 @@ const filterName = ref<string>("");
 const filters = ref<FilterType>({});
 const isAddNewTask = ref<boolean>(false);
 const isUpdateTask = ref<boolean>(false);
+const isDeleting = ref<boolean>(false);
+const idToDelete = ref<string>('');
 const expenseDataUpdate = ref<Expense>({
   id: '',
   name: '',
@@ -73,6 +81,7 @@ const expenseDataUpdate = ref<Expense>({
   category: '',
   date: ''
 });
+const newCategories = ref<Category[]>([]);
 
 //methods
 function addNewTask(task: Expense) {
@@ -92,11 +101,17 @@ function expenseToUpdate(expense: Expense): void {
   isUpdateTask.value = true;
 }
 //delete expense by id
-function deleteExpense(id: string) {
-  const index = expenses.findIndex((exp) => exp.id == id);
+function deleteExpense() {
+  const index = expenses.findIndex((exp) => exp.id == idToDelete.value);
   if(index !== -1){
     expenses.splice(index, 1);
+    isDeleting.value = false;
   }
+}
+//get categories props from filter
+function getCategories(categoriesProp: Category[]) {  
+  newCategories.value = categoriesProp;
+  
 }
 //update expense by id
 function updateExpense(expense: Expense) {

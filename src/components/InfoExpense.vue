@@ -15,37 +15,46 @@
                     <select :class="{ 'border-[red]': isCategoryValid }" v-model="category"
                         class=" border-2 p-3 outline-none rounded-md">
                         <option disabled value="">Select category</option>
-                        <option>Food</option>
-                        <option>Shopping</option>
-                        <option>Travel</option>
-                        <option>Rent</option>
+                        <option v-for="category in categories" :key="category.id" v-memo="category.id">{{ category.name }}</option>
                     </select>
                     <input :class="{ 'border-[red]': isDateValid }" type="date" placeholder="Expense name..."
                         v-model="date" class="p-3 border-2 outline-none rounded-md" />
                 </section>
                 <div class="flex justify-end gap-x-5">
-                    <button @click="closeExpanse" class="bg-red-500 text-white px-4 py-2 rounded">
-                        Cancel
-                    </button>
-                    <button @click="addExpanse" class="bg-blue-500 text-white px-4 py-2 rounded">
-                        Create
-                    </button>
+                    <p v-if="isExpenseSaved" class="text-lg w-[40%] text-[green]">Create succesfully</p>
+                    <div class="flex w-full justify-end gap-x-5">
+                        <button @click="closeExpanse" class="bg-red-500 text-white px-4 py-2 rounded">
+                            Cancel
+                        </button>
+                        <button @click="clearInfoExpenseAfterCreated" class="bg-green-500 text-white px-4 py-2 rounded">
+                            Clear
+                        </button>
+                        <button @click="addExpanse" class="bg-blue-500 text-white px-4 py-2 rounded">
+                            Create
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 //interfaces
-import type { Expense } from '@/Interface/Interface';
+import type { Category, Expense } from '@/Interface/Interface';
 
 //emits
 const emit = defineEmits<{
     (event: 'addNewTask', expense: Expense): void,
     (event: 'close'): void,
+}>();
+
+//props 
+const prop = defineProps<{
+    categoriesProp:Category[]
 }>();
 
 //reactive properties
@@ -57,6 +66,26 @@ const isExpenseValid = ref<boolean>(false);
 const isPriceValid = ref<boolean>(false);
 const isCategoryValid = ref<boolean>(false);
 const isDateValid = ref<boolean>(false);
+const isExpenseSaved = ref<boolean>(false);
+const categories = reactive<Category[]>([
+    {
+        id: "fdser324Sfds",
+        name:"Food"
+    },
+    {
+        id: "fdsxwr324Sfdx",
+        name:"Shopping"
+    },
+    {
+        id: "aqsxwr324Sfdp",
+        name:"Travel"
+    },
+    {
+        id: "klqsxcjr324Sfdp",
+        name:"Rent"
+    }
+]);
+
 
 //methods
 //add expanse 
@@ -72,7 +101,7 @@ function addExpanse(): void {
             date: date.value
         }
         emit('addNewTask', expense);
-        clearInfoExpenseAfterCreated();
+        isExpenseSaved.value = true;
     }
 }
 
@@ -128,4 +157,11 @@ function clearInfoExpenseAfterCreated() {
     category.value = "";
     date.value = "";
 }
+
+//mouted()
+onMounted(()=>{
+    prop.categoriesProp.forEach((newC) => {
+        categories.push(newC);
+    })
+})
 </script>
