@@ -24,3 +24,9 @@ export interface ValidationStatus {
   category: boolean;
   date: boolean;
 }
+
+
+export interface Category {
+  id: string;
+  name: string;
+}
